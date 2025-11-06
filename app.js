@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const healthCheck = require('./controllers/healthchecks');
 const logger = require('./middleware/logger');
 const cors = require('cors');
+const axios = require('axios');
 // No longer need to import jwtauth here
 const apiRoutes = require('./routes/api.routes');
 const userRoutes = require('./routes/user.routes');
@@ -28,12 +29,37 @@ mongoose.connect(MONGO_URI)
 // --- MIDDLEWARE ---
 app.use(express.json());
 app.use(logger);
-app.use(cors());
+app.use(cors({
+  origin: 'https://wad2-proj.vercel.app',  // EDITED for quick fix CORS between renderer and Vercel
+  methods: ['GET', 'POST'], 
+  allowedHeaders: ['Content-Type'], 
+}));
 
 // --- ROUTES ---
 app.use('/', healthCheck);
 app.use('/users', userRoutes);
 app.use('/api', apiRoutes);
+
+
+// Data.sg CORS issue quick fix
+const datasetId = 'd_688b934f82c1059ed0a6993d2a829089';
+const apiUrl = `https://data.gov.sg/api/action/datastore_search?resource_id=${datasetId}&limit=500`;
+
+app.get('/api/fetch-schools', async (req, res) => {
+  try {
+    const response = await axios.get(apiUrl); 
+    if (response.data && response.data.result && Array.isArray(response.data.result.records)) {
+      console.log('✅ Success! Received records:', response.data.result.records.length);
+    } else {
+      console.warn('⚠️ Unexpected response structure:', response.data);
+    }
+    res.json(response.data)
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    res.status(500).json({ error: 'Failed to fetch data' });
+  }
+});
+
 
 // REMOVE THIS LINE: app.use(jwtauth);
 
