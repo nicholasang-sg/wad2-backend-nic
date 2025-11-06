@@ -30,9 +30,9 @@ mongoose.connect(MONGO_URI)
 app.use(express.json());
 app.use(logger);
 app.use(cors({
-  origin: 'https://wad2-proj.vercel.app',  // EDITED for quick fix CORS between renderer and Vercel
-  methods: ['GET', 'POST'], 
-  allowedHeaders: ['Content-Type'], 
+  origin: ['https://wad2-proj.vercel.app', 'http://localhost:5173'],
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type'],
 }));
 
 // --- ROUTES ---
